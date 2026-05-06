@@ -1,4 +1,8 @@
-// Phase 1 starter schema. Expand in Phase 2 when member gating lands.
+// Phase 2 schema: subscribers, confirmation tokens, and members.
+//
+// A Subscriber is the local mirror of a Listmonk subscriber for a single
+// pen-name list. Confirmation happens through our own JWT-link flow so we
+// can issue a session cookie at the same moment we mark the subscriber confirmed.
 
 generator client {
   provider = "prisma-client-js"
@@ -14,15 +18,17 @@ enum PenName {
   ALEXANDRA_KNIGHT
 }
 
-model Member {
-  id           String   @id @default(cuid())
-  email        String
-  penName      PenName
-  confirmedAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Subscriber {
+  id                   String    @id @default(cuid())
+  email                String
+  penName              PenName
+  listmonkSubscriberId Int?
+  confirmedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@unique([email, penName])
+  @@index([penName])
 }
 
 model Release {
