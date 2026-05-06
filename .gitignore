@@ -1,6 +1,7 @@
 node_modules/
 .omc/
 dist/
+*.tsbuildinfo
 build/
 out/
 .next/
