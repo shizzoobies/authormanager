@@ -1,3 +1,4 @@
+import nodemailer, { type Transporter } from "nodemailer";
 import { config } from "../config.js";
 import type { PenSlug } from "./jwt.js";
 
@@ -34,36 +35,38 @@ This link expires in 24 hours. If you didn't request this, simply close this mes
 Alexandra`
 };
 
+const FROM_BY_PEN: Record<PenSlug, string> = {
+  "alexi-hart": config.emailFrom["alexi-hart"],
+  "alexandra-knight": config.emailFrom["alexandra-knight"]
+};
+
+let transporter: Transporter | null = null;
+
+function getTransporter(): Transporter | null {
+  if (transporter) return transporter;
+  if (!config.smtp.host || !config.smtp.user) return null;
+  transporter = nodemailer.createTransport({
+    host: config.smtp.host,
+    port: config.smtp.port,
+    secure: config.smtp.secure,
+    requireTLS: !config.smtp.secure,
+    auth: { user: config.smtp.user, pass: config.smtp.pass }
+  });
+  return transporter;
+}
+
 export async function sendConfirmationEmail({ to, pen, confirmUrl }: SendArgs): Promise<void> {
   const subject = SUBJECTS[pen];
-  const body = BODIES[pen](confirmUrl);
+  const text = BODIES[pen](confirmUrl);
+  const from = FROM_BY_PEN[pen];
 
-  if (!config.listmonkUrl || !config.listmonkUser) {
-    // Dev fallback: log to console so the developer can click the link.
+  const tx = getTransporter();
+  if (!tx) {
     console.log(
-      `\n[email:dev]\n  to: ${to}\n  pen: ${pen}\n  subject: ${subject}\n  body: ${body}\n`
+      `\n[email:dev]\n  to: ${to}\n  from: ${from}\n  pen: ${pen}\n  subject: ${subject}\n  body:\n${text}\n`
     );
     return;
   }
 
-  // Listmonk transactional API. Requires a tx template named after the pen.
-  const templateName = `confirm-${pen}`;
-  const res = await fetch(`${config.listmonkUrl}/api/tx`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization:
-        "Basic " +
-        Buffer.from(`${config.listmonkUser}:${config.listmonkToken}`).toString("base64")
-    },
-    body: JSON.stringify({
-      subscriber_email: to,
-      template_id: templateName,
-      data: { confirm_url: confirmUrl, subject, body }
-    })
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`listmonk tx send failed: ${res.status} ${text}`);
-  }
+  await tx.sendMail({ from, to, subject, text });
 }

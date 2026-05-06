@@ -6,6 +6,8 @@ function required(name: string): string {
   return v;
 }
 
+const smtpPort = Number(process.env.SMTP_PORT ?? 2587);
+
 export const config = {
   port: Number(process.env.PORT ?? 4000),
   isProd: process.env.NODE_ENV === "production",
@@ -26,12 +28,34 @@ export const config = {
     "alexi-hart": process.env.MAGNET_URL_ALEXI_HART ?? "",
     "alexandra-knight": process.env.MAGNET_URL_ALEXANDRA_KNIGHT ?? ""
   },
+  smtp: {
+    host: process.env.SMTP_HOST ?? "",
+    port: smtpPort,
+    secure: smtpPort === 465 || smtpPort === 2465,
+    user: process.env.SMTP_USER ?? "",
+    pass: process.env.SMTP_PASS ?? ""
+  },
+  emailFrom: {
+    "alexi-hart": process.env.EMAIL_FROM_ALEXI_HART ?? "Alexi Hart <hello@alexihart.com>",
+    "alexandra-knight":
+      process.env.EMAIL_FROM_ALEXANDRA_KNIGHT ?? "Alexandra Knight <hello@alex-knight.com>"
+  },
   required
 };
 
-export const ALLOWED_ORIGINS = [
-  config.siteUrls["alexi-hart"],
-  config.siteUrls["alexandra-knight"],
-  "http://localhost:4321",
-  "http://localhost:4322"
-];
+function parseCsv(name: string): string[] {
+  return (process.env[name] ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export const ALLOWED_ORIGINS = Array.from(
+  new Set([
+    config.siteUrls["alexi-hart"],
+    config.siteUrls["alexandra-knight"],
+    ...parseCsv("EXTRA_ORIGINS"),
+    "http://localhost:4321",
+    "http://localhost:4322"
+  ])
+);
