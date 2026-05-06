@@ -1,0 +1,20 @@
+{
+  "name": "author-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared backend, desktop app, and packages for Alexi Hart and Alexandra Knight pen names",
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @author/api dev",
+    "dev:desktop": "pnpm --filter @author/desktop dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
