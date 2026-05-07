@@ -8,7 +8,37 @@
     "build": "tsc -b && vite build && tsc -p electron/tsconfig.json",
     "start": "electron .",
     "app": "pnpm build && pnpm start",
+    "package": "pnpm build && electron-builder --win --x64",
+    "package:portable": "pnpm build && electron-builder --win portable --x64",
     "typecheck": "tsc -b --noEmit && tsc -p electron/tsconfig.json --noEmit"
+  },
+  "build": {
+    "appId": "com.alexanderson.authorcontrol",
+    "productName": "Author Control Center",
+    "files": [
+      "electron/dist/**",
+      "dist/**",
+      "package.json",
+      "!**/*.map"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Author Control"
+    }
   },
   "dependencies": {
     "@author/api-client": "workspace:*",

@@ -52,11 +52,19 @@ function createWindow() {
     }
   });
 
+  const indexPath = path.resolve(__dirname, "..", "..", "dist", "index.html");
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    mainWindow.loadFile(indexPath);
   }
+
+  mainWindow.webContents.on("did-fail-load", (_e, code, desc, url) => {
+    console.error(`[did-fail-load] ${code} ${desc} url=${url} attempted=${indexPath}`);
+  });
+  mainWindow.webContents.on("render-process-gone", (_e, details) => {
+    console.error(`[render-process-gone]`, details);
+  });
 }
 
 app.whenReady().then(createWindow);

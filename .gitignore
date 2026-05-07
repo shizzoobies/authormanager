@@ -3,6 +3,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 build/
+!apps/desktop/build/
 out/
 .next/
 .turbo/
