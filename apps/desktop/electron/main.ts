@@ -48,10 +48,13 @@ function writeStore(store: Store): void {
 }
 
 function createWindow() {
+  const iconPath = path.resolve(__dirname, "..", "..", "build", "icon.png");
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
     backgroundColor: "#0f0f12",
+    icon: iconPath,
+    title: "Author Control Center",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
