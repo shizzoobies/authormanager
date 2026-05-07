@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dashboard } from "./Dashboard";
 import { Settings } from "./Settings";
+import { NewsletterStudio } from "./NewsletterStudio";
 import { bridge } from "../bridge";
 
 type ModuleKey = "dashboard" | "publisher" | "newsletter" | "social" | "releases" | "settings";
@@ -52,8 +53,9 @@ export function Shell() {
           </div>
         ) : null}
         {active === "dashboard" ? <Dashboard /> : null}
+        {active === "newsletter" ? <NewsletterStudio /> : null}
         {active === "settings" ? <Settings /> : null}
-        {active !== "dashboard" && active !== "settings" ? (
+        {active !== "dashboard" && active !== "settings" && active !== "newsletter" ? (
           <Placeholder name={modules.find((m) => m.key === active)?.label ?? active} />
         ) : null}
       </main>

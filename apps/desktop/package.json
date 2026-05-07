@@ -41,6 +41,7 @@
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@author/api-client": "workspace:*",
     "bcryptjs": "^2.4.3",
     "electron-store": "^10.0.0",
