@@ -15,7 +15,13 @@ interface Store {
   listmonkUser?: string;
   listmonkToken?: string;
   anthropicApiKey?: string;
+  githubToken?: string;
 }
+
+const GITHUB_REPOS: Record<"alexi-hart" | "alexandra-knight", { owner: string; repo: string; branch: string }> = {
+  "alexi-hart": { owner: "shizzoobies", repo: "Alexi-Hart", branch: "main" },
+  "alexandra-knight": { owner: "shizzoobies", repo: "Alexandra-Knight", branch: "main" }
+};
 
 function readStore(): Store {
   try {
@@ -240,6 +246,90 @@ ipcMain.handle(
     if (!jsonMatch) throw new Error("Could not parse model response: " + text.slice(0, 200));
     const parsed = JSON.parse(jsonMatch[0]) as { subject: string; body: string };
     return parsed;
+  }
+);
+
+// ---------- GitHub ----------
+ipcMain.handle("github:get-config", () => ({ hasToken: Boolean(readStore().githubToken) }));
+
+ipcMain.handle("github:set-token", (_e, token: string) => {
+  const s = readStore();
+  s.githubToken = token;
+  writeStore(s);
+  return true;
+});
+
+async function ghRequest(token: string, method: string, path: string, body?: unknown) {
+  const res = await fetch(`https://api.github.com${path}`, {
+    method,
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: "application/vnd.github+json",
+      "x-github-api-version": "2022-11-28",
+      "user-agent": "author-control-center",
+      ...(body ? { "content-type": "application/json" } : {})
+    },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
+  const text = await res.text();
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`GitHub ${res.status}: ${text.slice(0, 300)}`);
+  }
+  return { status: res.status, body: text ? JSON.parse(text) : null };
+}
+
+ipcMain.handle(
+  "github:put-file",
+  async (
+    _e,
+    args: {
+      pen: "alexi-hart" | "alexandra-knight";
+      path: string;
+      contentBase64: string;
+      message: string;
+    }
+  ) => {
+    const s = readStore();
+    if (!s.githubToken) throw new Error("GitHub token not configured.");
+    const repo = GITHUB_REPOS[args.pen];
+    const apiPath = `/repos/${repo.owner}/${repo.repo}/contents/${args.path}`;
+
+    // Probe for existing file to get SHA (required when updating).
+    const existing = await ghRequest(s.githubToken, "GET", `${apiPath}?ref=${repo.branch}`);
+    const sha =
+      existing.status === 200 && existing.body && typeof existing.body === "object"
+        ? (existing.body as { sha?: string }).sha
+        : undefined;
+
+    const put = await ghRequest(s.githubToken, "PUT", apiPath, {
+      message: args.message,
+      content: args.contentBase64,
+      branch: repo.branch,
+      ...(sha ? { sha } : {})
+    });
+    if (put.status >= 400) throw new Error(`GitHub commit failed: ${put.status}`);
+    return put.body;
+  }
+);
+
+ipcMain.handle(
+  "github:get-file",
+  async (_e, args: { pen: "alexi-hart" | "alexandra-knight"; path: string }) => {
+    const s = readStore();
+    if (!s.githubToken) throw new Error("GitHub token not configured.");
+    const repo = GITHUB_REPOS[args.pen];
+    const result = await ghRequest(
+      s.githubToken,
+      "GET",
+      `/repos/${repo.owner}/${repo.repo}/contents/${args.path}?ref=${repo.branch}`
+    );
+    if (result.status === 404) return null;
+    const body = result.body as { content?: string; encoding?: string; sha?: string } | null;
+    if (!body || !body.content) return null;
+    return {
+      sha: body.sha,
+      content: Buffer.from(body.content, (body.encoding as BufferEncoding) || "base64").toString("utf8")
+    };
   }
 );
 

@@ -8,6 +8,8 @@ export function Settings() {
   const [hasToken, setHasToken] = useState(false);
   const [anthropicKey, setAnthropicKey] = useState("");
   const [hasAnthropicKey, setHasAnthropicKey] = useState(false);
+  const [githubToken, setGithubToken] = useState("");
+  const [hasGithubToken, setHasGithubToken] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -19,6 +21,7 @@ export function Settings() {
       setHasToken(c.hasToken);
     });
     bridge.anthropic.getConfig().then((c) => setHasAnthropicKey(c.hasKey));
+    bridge.github.getConfig().then((c) => setHasGithubToken(c.hasToken));
   }, []);
 
   async function saveListmonk(e: React.FormEvent) {
@@ -47,6 +50,23 @@ export function Settings() {
       await bridge.anthropic.setKey(anthropicKey.trim());
       setHasAnthropicKey(true);
       setAnthropicKey("");
+      setSavedAt(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveGithub(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      if (!githubToken.trim()) throw new Error("Token required.");
+      await bridge.github.setToken(githubToken.trim());
+      setHasGithubToken(true);
+      setGithubToken("");
       setSavedAt(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -124,6 +144,32 @@ export function Settings() {
           <div className="row">
             <button type="submit" disabled={busy}>
               {busy ? "Saving…" : "Save key"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="settings-section">
+        <h2>GitHub access</h2>
+        <p className="muted small">
+          Required for Content Publisher and Release Manager. Use a fine-grained personal access
+          token with <span className="code">contents:write</span> on the{" "}
+          <span className="code">Alexi-Hart</span> and <span className="code">Alexandra-Knight</span>{" "}
+          repos.
+        </p>
+        <form onSubmit={saveGithub} className="settings-form">
+          <label>
+            <span>Token</span>
+            <input
+              value={githubToken}
+              type="password"
+              onChange={(e) => setGithubToken(e.target.value)}
+              placeholder={hasGithubToken ? "•••••••• (set, paste new to replace)" : "github_pat_..."}
+            />
+          </label>
+          <div className="row">
+            <button type="submit" disabled={busy}>
+              {busy ? "Saving…" : "Save token"}
             </button>
           </div>
         </form>

@@ -21,6 +21,16 @@ contextBridge.exposeInMainWorld("authorBridge", {
     draftNewsletter: (args: { pen: string; notes: string }) =>
       ipcRenderer.invoke("anthropic:draft-newsletter", args)
   },
+  github: {
+    getConfig: () => ipcRenderer.invoke("github:get-config"),
+    setToken: (token: string) => ipcRenderer.invoke("github:set-token", token),
+    putFile: (args: { pen: string; path: string; contentBase64: string; message: string }) =>
+      ipcRenderer.invoke("github:put-file", args),
+    getFile: (args: { pen: string; path: string }) =>
+      ipcRenderer.invoke("github:get-file", args) as Promise<
+        { sha: string; content: string } | null
+      >
+  },
   encrypt: (plaintext: string) => ipcRenderer.invoke("safe-storage:encrypt", plaintext),
   decrypt: (ciphertextB64: string) => ipcRenderer.invoke("safe-storage:decrypt", ciphertextB64)
 });

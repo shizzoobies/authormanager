@@ -471,3 +471,8 @@ textarea:focus {
   border-radius: var(--radius);
   margin-bottom: 16px;
 }
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}

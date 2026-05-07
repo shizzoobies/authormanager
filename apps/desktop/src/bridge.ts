@@ -20,6 +20,19 @@ export interface AuthorBridge {
       body: string;
     }>;
   };
+  github: {
+    getConfig: () => Promise<{ hasToken: boolean }>;
+    setToken: (token: string) => Promise<boolean>;
+    putFile: (args: {
+      pen: PenSlug;
+      path: string;
+      contentBase64: string;
+      message: string;
+    }) => Promise<unknown>;
+    getFile: (args: { pen: PenSlug; path: string }) => Promise<
+      { sha: string; content: string } | null
+    >;
+  };
   encrypt: (plaintext: string) => Promise<string>;
   decrypt: (ciphertextB64: string) => Promise<string>;
 }

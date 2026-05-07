@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Dashboard } from "./Dashboard";
 import { Settings } from "./Settings";
 import { NewsletterStudio } from "./NewsletterStudio";
+import { ContentPublisher } from "./ContentPublisher";
+import { ReleaseManager } from "./ReleaseManager";
 import { bridge } from "../bridge";
 
 type ModuleKey = "dashboard" | "publisher" | "newsletter" | "social" | "releases" | "settings";
@@ -54,10 +56,10 @@ export function Shell() {
         ) : null}
         {active === "dashboard" ? <Dashboard /> : null}
         {active === "newsletter" ? <NewsletterStudio /> : null}
+        {active === "publisher" ? <ContentPublisher /> : null}
+        {active === "releases" ? <ReleaseManager /> : null}
         {active === "settings" ? <Settings /> : null}
-        {active !== "dashboard" && active !== "settings" && active !== "newsletter" ? (
-          <Placeholder name={modules.find((m) => m.key === active)?.label ?? active} />
-        ) : null}
+        {active === "social" ? <Placeholder name="Social Scheduler" /> : null}
       </main>
     </div>
   );
@@ -67,7 +69,7 @@ function Placeholder({ name }: { name: string }) {
   return (
     <div className="placeholder">
       <h1>{name}</h1>
-      <p className="muted">Coming in the next session.</p>
+      <p className="muted">Phase 4 module — Meta and X API tokens needed.</p>
     </div>
   );
 }
